@@ -148,14 +148,11 @@ reverted-clone establishment.
 
 ## Citing this code
 
-Once archived, add the Zenodo DOI badge and citation here, e.g.:
 
 ```
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21723003.svg)](https://doi.org/10.5281/zenodo.21723003)
 ```
 
-A `CITATION.cff` file is recommended alongside this README so GitHub renders
-a "Cite this repository" button automatically.
 
 ## License
 
