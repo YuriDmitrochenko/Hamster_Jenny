@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "Monolayer Epithelium — Headless Simulation Engine"
+type: software
+version: 0.1.0
+date-released: "2026-07-30"
+authors:
+  - family-names: "Dmitrochenko"
+    given-names: "Yuri"
+  - family-names: "Demi"
+    given-names: "Sarah-Lana"
+license: "PolyForm-Noncommercial-1.0.0"
+repository-code: "TODO: fill in the GitHub URL once the repository is created"
+doi: "TODO: fill in the Zenodo DOI once archived (e.g. 10.5281/zenodo.XXXXXXX)"
+keywords:
+  - epithelium
+  - cellular automaton
+  - monolayer
+  - dysplasia
+  - simulation
