@@ -149,9 +149,8 @@ reverted-clone establishment.
 ## Citing this code
 
 
-```
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21723003.svg)](https://doi.org/10.5281/zenodo.21723003)
-```
+
 
 
 ## License
