@@ -10,8 +10,8 @@ authors:
   - family-names: "Demi"
     given-names: "Sarah-Lana"
 license: "PolyForm-Noncommercial-1.0.0"
-repository-code: https://github.com/YuriDmitrochenko/Hamster_Jenny.git
-doi: [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21723003.svg)](https://doi.org/10.5281/zenodo.21723003)
+repository-code: "https://github.com/YuriDmitrochenko/Hamster_Jenny.git"
+doi: "https://doi.org/10.5281/zenodo.21723003"
 keywords:
   - epithelium
   - cellular automaton
