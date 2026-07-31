@@ -151,7 +151,7 @@ reverted-clone establishment.
 Once archived, add the Zenodo DOI badge and citation here, e.g.:
 
 ```
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.XXXXXXX.svg)](https://doi.org/10.5281/zenodo.XXXXXXX)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21723003.svg)](https://doi.org/10.5281/zenodo.21723003)
 ```
 
 A `CITATION.cff` file is recommended alongside this README so GitHub renders
