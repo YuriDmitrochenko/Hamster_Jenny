@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Epithelium: shedding, spreading, tension</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;700&family=Barlow:wght@400;500&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#E4E9E6; --grid:#C6D1CC; --ink:#1B2A2E; --ink-soft:#5C6E70;
+    --diff:#E0B21A; --resv:#3E6C8C; --div:#B3231C; --shed:#14181A;
+    --teal:#2E7C7B; --hair:rgba(27,42,46,.22);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--paper);
+    background-image:linear-gradient(var(--grid) .5px,transparent .5px),linear-gradient(90deg,var(--grid) .5px,transparent .5px);
+    background-size:24px 24px,24px 24px;
+    color:var(--ink); font-family:"Barlow",system-ui,sans-serif; font-size:15px; line-height:1.45;
+    -webkit-text-size-adjust:100%}
+  .sheet{max-width:520px; margin:0 auto; padding:18px 16px 40px; box-shadow:0 0 0 .5px var(--hair); min-height:100vh}
+  .eyebrow{font-family:"Barlow Condensed",sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.22em; font-size:11px; color:var(--ink-soft)}
+  h1{font-family:"Barlow Condensed",sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.04em; font-size:28px; line-height:1; margin:6px 0 10px}
+  .lede{font-size:14px; color:var(--ink-soft); margin:0 0 16px; max-width:44ch}
+  .rule{height:0; border-top:.5px solid var(--hair); margin:16px 0}
+  .rule.thick{border-top:1.5px solid var(--ink); opacity:.85}
+  h2{font-family:"Barlow Condensed",sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.16em; font-size:12px; margin:0 0 8px; color:var(--ink-soft); display:flex; align-items:baseline; gap:8px}
+  h2::after{content:""; flex:1; border-top:.5px solid var(--hair)}
+  canvas{display:block; width:100%; touch-action:manipulation}
+  .plate{border:.5px solid var(--hair); background:rgba(255,255,255,.45)}
+  .mode{font-family:"Barlow Condensed",sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.07em; font-size:15px; margin:10px 0 3px}
+  .mode.warn{color:var(--div)}
+  .mode-note{font-size:13px; color:var(--ink-soft)}
+  .legend{display:flex; gap:6px 14px; flex-wrap:wrap; font-size:12px; color:var(--ink-soft); margin-top:8px; font-family:"IBM Plex Mono",monospace}
+  .legend span{display:flex; align-items:center; gap:6px}
+  .legend i{width:12px; height:12px; border:.5px solid rgba(27,42,46,.5); display:inline-block}
+  .readout{display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--hair)}
+  .cell{background:var(--paper); padding:8px 10px}
+  .cell .k{font-family:"Barlow Condensed",sans-serif; font-weight:500; text-transform:uppercase; letter-spacing:.12em; font-size:10px; color:var(--ink-soft); display:block}
+  .cell .v{font-family:"IBM Plex Mono",ui-monospace,monospace; font-weight:500; font-size:17px; font-variant-numeric:tabular-nums}
+  .cell .v small{font-size:11px; font-weight:400; color:var(--ink-soft)}
+  .cell .v.big{font-size:22px; font-weight:600}
+  .ctl{margin:12px 0}
+  .ctl-head{display:flex; justify-content:space-between; align-items:baseline; gap:10px; font-family:"Barlow Condensed",sans-serif; font-weight:500; text-transform:uppercase; letter-spacing:.12em; font-size:11px; color:var(--ink-soft)}
+  .ctl-head b{font-family:"IBM Plex Mono",monospace; font-weight:600; font-size:14px; letter-spacing:0; color:var(--ink); font-variant-numeric:tabular-nums}
+  input[type=range]{-webkit-appearance:none; appearance:none; width:100%; height:22px; background:transparent; margin:2px 0 0; display:block}
+  input[type=range]::-webkit-slider-runnable-track{height:1px; background:var(--ink); opacity:.5}
+  input[type=range]::-moz-range-track{height:1px; background:var(--ink); opacity:.5}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:15px; height:15px; margin-top:-7px; border-radius:50%; background:var(--diff); border:1.5px solid var(--ink)}
+  input[type=range]::-moz-range-thumb{width:15px; height:15px; border-radius:50%; background:var(--diff); border:1.5px solid var(--ink)}
+  input[type=range]:focus-visible{outline:2px solid var(--div); outline-offset:4px}
+  .row{display:flex; gap:8px; flex-wrap:wrap; margin-top:14px}
+  button{flex:1 1 auto; min-height:44px; padding:0 12px; font-family:"Barlow Condensed",sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.12em; font-size:13px; color:var(--paper); background:var(--ink); border:1.5px solid var(--ink); cursor:pointer}
+  button.ghost{background:transparent; color:var(--ink)}
+  button.act{background:var(--div); border-color:var(--div)}
+  button:active{transform:translateY(1px)}
+  button:focus-visible{outline:2px solid var(--div); outline-offset:2px}
+  label.check{display:flex; gap:10px; align-items:flex-start; margin-top:12px; font-size:13px; color:var(--ink-soft); cursor:pointer}
+  label.check input{margin:2px 0 0; accent-color:var(--diff); width:17px; height:17px}
+  .note{font-size:12.5px; color:var(--ink-soft); margin-top:10px}
+  .note code{font-family:"IBM Plex Mono",monospace; font-size:12px; background:rgba(27,42,46,.06); padding:1px 4px}
+  table.map{width:100%; border-collapse:collapse; font-family:"IBM Plex Mono",monospace; font-size:12px; margin-top:8px}
+  table.map th{font-family:"Barlow Condensed",sans-serif; text-transform:uppercase; letter-spacing:.1em; font-size:10px; color:var(--ink-soft); text-align:right; padding:3px 5px; border-bottom:.5px solid var(--hair)}
+  table.map th:first-child{text-align:left}
+  table.map td{text-align:right; padding:3px 5px; border-bottom:.5px solid rgba(27,42,46,.08)}
+  table.map td:first-child{text-align:left}
+  table.map tr.hi td{color:var(--div); font-weight:600}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+  /* ---- expanded mode: the sheet canvas takes the whole viewport ---- */
+  body.expanded{overflow:hidden}
+  body.expanded .sheet{display:none}
+  body.expanded #sheetCv{
+    display:block; position:fixed; top:50%; left:50%;
+    transform:translate(-50%,-50%); z-index:9998;
+    box-shadow:0 0 0 .5px var(--hair); background:var(--paper)}
+  #bExit{display:none}
+  body.expanded #bExit{
+    display:block; position:fixed; top:10px; right:10px; z-index:9999;
+    min-height:36px; width:auto; flex:none; opacity:.85}
+  body.expanded #expandBar{
+    display:flex; gap:8px; position:fixed; bottom:10px; left:50%;
+    transform:translateX(-50%); z-index:9999; opacity:.9}
+  #expandBar{display:none}
+  #expandBar button{min-height:36px; font-size:12px}
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <div class="eyebrow">Bench · territories, tension, reserve</div>
+  <h1>Shedding,<br>spreading,<br>awakening</h1>
+  <p class="lede">A cell owns a territory of one to four nodes. Shedding frees nodes, neighbours claim them and spread, tension rises, reserve cells wake and divide, and division splits the territory, returning tension to normal.</p>
+
+  <div class="rule thick"></div>
+
+  <h2>Sheet · cell borders, not node borders</h2>
+  <canvas id="sheetCv" class="plate" aria-label="Epithelial monolayer"></canvas>
+  <div class="legend">
+    <span><i style="background:#E0B21A"></i>differentiated</span>
+    <span><i style="background:#3E6C8C"></i>reserve</span>
+    <span><i style="background:#B3231C"></i>dividing</span>
+    <span><i style="background:#14181A"></i>shedding</span>
+    <span><i style="background:#8B3FA8"></i>reverted</span>
+    <span><i style="background:#3B4FD8"></i>reverted reserve</span>
+  </div>
+  <div class="mode" id="mode">—</div>
+  <div class="mode-note" id="modeNote"></div>
+
+  <div class="rule"></div>
+
+  <div class="row" style="margin-top:0">
+    <button id="bRun">Pause</button>
+    <button id="bSpeed" class="ghost">Speed 4.8 h/s</button>
+  </div>
+  <div class="row">
+    <button id="bWound" class="act">Inflict wound</button>
+    <button id="bReset" class="ghost">Reset</button>
+  </div>
+  <div class="row">
+    <button id="bRec">● Record video</button>
+    <button id="bShot" class="ghost">Save frame</button>
+  </div>
+  <div id="dlWrap" style="display:none;margin-top:10px">
+    <a id="dl" class="note" style="color:var(--div);font-weight:600" download>download</a>
+    <span class="note" id="dlInfo"></span>
+  </div>
+  <label class="check"><input type="checkbox" id="cCap" checked>
+    <span>Burn a parameter caption into the frame, so a recording documents the
+    run it came from.</span></label>
+  <div class="ctl">
+    <div class="ctl-head"><span>Wound, cells</span><b id="vDef">600</b></div>
+    <input type="range" id="sDef" min="50" max="2400" step="50" value="600">
+  </div>
+  <div class="ctl">
+    <div class="ctl-head"><span>Recurrent injury, every</span><b id="vEvery">off</b></div>
+    <input type="range" id="sEvery" min="0" max="240" step="6" value="0">
+  </div>
+
+  <div class="rule"></div>
+
+  <h2>Reserve balance</h2>
+  <div class="readout">
+    <div class="cell"><span class="k">Reserve required · T/τ</span><span class="v big" id="rNeed">—</span></div>
+    <div class="cell"><span class="k">Reserve margin</span><span class="v big" id="rMarg">—</span></div>
+    <div class="cell"><span class="k">Sheet density</span><span class="v big" id="rDens">—</span></div>
+    <div class="cell"><span class="k">Mean cell area</span><span class="v big" id="rArea">—</span></div>
+  </div>
+
+  <div class="rule"></div>
+
+  <h2>Chart recorder</h2>
+  <canvas id="traceCv" class="plate" aria-label="Population dynamics"></canvas>
+  <div class="legend">
+    <span><i style="background:#1B2A2E"></i>density</span>
+    <span><i style="background:#B3231C"></i>dividing</span>
+    <span><i style="background:#3E6C8C"></i>reserve</span>
+    <span><i style="background:#2E7C7B"></i>min. glucose</span>
+  </div>
+
+  <div class="rule"></div>
+
+  <h2>Readings</h2>
+  <div class="readout">
+    <div class="cell"><span class="k">Elapsed time</span><span class="v" id="rT">0 <small>h</small></span></div>
+    <div class="cell"><span class="k">Cells total</span><span class="v" id="rN">0</span></div>
+    <div class="cell"><span class="k">Differentiated</span><span class="v" id="rDiff">0</span></div>
+    <div class="cell"><span class="k">Reserve at rest</span><span class="v" id="rResv">0</span></div>
+    <div class="cell"><span class="k">Dividing now</span><span class="v" id="rDiv">0</span></div>
+    <div class="cell"><span class="k">Reserve mobilized</span><span class="v" id="rMob">— <small>%</small></span></div>
+    <div class="cell"><span class="k">Shedding now</span><span class="v" id="rShed">0</span></div>
+    <div class="cell"><span class="k">Shed in total</span><span class="v" id="rShedT">0</span></div>
+    <div class="cell"><span class="k">Died of starvation</span><span class="v" id="rStarve">0</span></div>
+    <div class="cell"><span class="k">Free nodes</span><span class="v" id="rFree">0</span></div>
+    <div class="cell"><span class="k">Min. glucose</span><span class="v" id="rG">— <small>·C₀</small></span></div>
+    <div class="cell"><span class="k">Starvation threshold</span><span class="v" id="rThr">— <small>·C₀</small></span></div>
+    <div class="cell"><span class="k">Reverted local glucose</span><span class="v" id="rRevG">— <small>·g</small></span></div>
+    <div class="cell"><span class="k">Wound, nodes</span><span class="v" id="rWn">—</span></div>
+    <div class="cell"><span class="k">Wound closed</span><span class="v" id="rWc">— <small>%</small></span></div>
+    <div class="cell"><span class="k">Reverted · purple</span><span class="v" id="rRev">0</span></div>
+    <div class="cell"><span class="k">Reverted reserve · blue</span><span class="v" id="rRevR">0</span></div>
+    <div class="cell"><span class="k">Reversions arisen</span><span class="v" id="rRevT">0</span></div>
+    <div class="cell"><span class="k">Reverted lost</span><span class="v" id="rRevL">0</span></div>
+    <div class="cell"><span class="k">Largest clone</span><span class="v" id="rClone">0 <small>cells</small></span></div>
+    <div class="cell"><span class="k">Clone establishment</span><span class="v" id="rEst">—</span></div>
+    <div class="cell"><span class="k">Injuries inflicted</span><span class="v" id="rWct">0</span></div>
+  </div>
+
+  <div class="rule"></div>
+
+  <h2 style="margin-top:20px">Tissue</h2>
+  <div class="ctl">
+    <div class="ctl-head"><span>Differentiated lifespan τ</span><b id="vLife">6.0 d</b></div>
+    <input type="range" id="sLife" min="2" max="24" step="0.5" value="6">
+  </div>
+  <div class="ctl">
+    <div class="ctl-head"><span>Lifespan spread ±</span><b id="vSpr">3.0 d</b></div>
+    <input type="range" id="sSpr" min="0" max="6" step="0.5" value="3">
+  </div>
+  <div class="ctl">
+    <div class="ctl-head"><span>Reserve share of progeny</span><b id="vP">1 : 10</b></div>
+    <input type="range" id="sP" min="0.02" max="0.35" step="0.005" value="0.0909">
+  </div>
+  <div class="ctl">
+    <div class="ctl-head"><span>Cell cycle time</span><b id="vCyc">15 h</b></div>
+    <input type="range" id="sCyc" min="6" max="30" step="1" value="15">
+  </div>
+  <div class="ctl">
+    <div class="ctl-head"><span>Spreading limit</span><b id="vAmax">4 nodes</b></div>
+    <input type="range" id="sAmax" min="2" max="5" step="1" value="4">
+  </div>
+  <div class="ctl">
+    <div class="ctl-head"><span>Tension wake threshold</span><b id="vTw">1.08</b></div>
+    <input type="range" id="sTw" min="1" max="2.2" step="0.02" value="1.08">
+  </div>
+  <div class="ctl">
+    <div class="ctl-head"><span>Supply σ</span><b id="vSig">0.85</b></div>
+    <input type="range" id="sSig" min="0.5" max="1.6" step="0.01" value="0.85">
+  </div>
+  <div class="ctl">
+    <div class="ctl-head"><span>Glucose circadian amplitude</span><b id="vGluc">30 %</b></div>
+    <input type="range" id="sGluc" min="0" max="0.6" step="0.05" value="0.3">
+  </div>
+  <p class="note">Glucose supply now oscillates sinusoidally with a fixed 24 h period; the amplitude sets the swing around the baseline — 30% means the delivery term ranges roughly ±30% around P₀ over the day. Because a sine averages to zero over a full cycle, the total daily dose is unchanged; only its distribution across the day is reshaped. Set to 0% to recover the constant-supply behaviour.</p>
+  <div class="ctl">
+    <div class="ctl-head"><span>Reversion rate, per daughter</span><b id="vRev">1 : 1000</b></div>
+    <input type="range" id="sRev" min="0" max="0.02" step="0.00025" value="0.001">
+  </div>
+  <div class="ctl">
+    <div class="ctl-head"><span>Niche tolerance</span><b id="vTol">2.4 h</b></div>
+    <input type="range" id="sTol" min="0" max="48" step="0.2" value="2.4">
+  </div>
+  <div class="ctl">
+    <div class="ctl-head"><span>Reverted glycogen store</span><b id="vStore">1 : 3</b></div>
+    <input type="range" id="sStore" min="0.1" max="1" step="0.05" value="0.333">
+  </div>
+  <div class="ctl">
+    <div class="ctl-head"><span>Reverted glucose gate</span><b id="vGate">0.50</b></div>
+    <input type="range" id="sGate" min="0" max="1" step="0.02" value="0.5">
+  </div>
+  <p class="note"><b>Finding a circadian-lethal regime.</b> The reverted lineage can only claim a niche or start dividing while its own local glucose (readout below) sits at or above this gate, and its glycogen refill scales with the same local glucose — it has no counter-regulatory buffer, unlike the normal lineage. To find a regime where the clone survives without the oscillation but not with it: set circadian amplitude to 0%, seed a reversion, let it settle, and read its steady local glucose off "Reverted local glucose" below. Raise the gate to just under that steady value — the clone should still establish. Then switch amplitude to 30%: if the gate is placed correctly, each trough pushes local glucose under it, growth stalls, tolerance runs out, and the clone is lost instead of establishing. Gate too low survives both cases; gate too high fails both — the working window sits between the trough and the peak of the oscillating local supply.</p>
+  <div class="row" style="margin-top:0">
+    <button id="bSeed" class="ghost">Seed one reversion</button>
+  </div>
+  <label class="check"><input type="checkbox" id="cTens">
+    <span>Show the tension field instead of cell states.</span></label>
+
+  <div class="rule"></div>
+
+  <h2>What the run showed</h2>
+  <p class="note"><b>An exact feasibility condition falls out of these numbers.</b> To offset shedding, every departing cell must be replaced by a division. Only reserve cells divide and each division takes one cycle time, so the throughput of the reserve is <code>D / T</code> divisions per hour while the requirement is <code>F / τ</code>. Setting them equal gives</p>
+  <p class="note" style="text-align:center;font-size:14px"><code>reserve fraction ≥ T<sub>cycle</sub> / τ</code></p>
+  <p class="note">With a 15 h cycle and a 6 day lifespan this is 15/144 = <b>10.4 %</b> — exactly the 10 % specified. The tissue sits right on the feasibility boundary, with zero margin.</p>
+  <table class="map">
+    <tr><th>τ, days</th><th>required</th><th>margin</th><th>density</th><th>mean area</th><th>mobilized</th></tr>
+    <tr class="hi"><td>6</td><td>10.4 %</td><td>0.96 ×</td><td>52 %</td><td>1.92</td><td>98 %</td></tr>
+    <tr><td>9</td><td>6.9 %</td><td>1.44 ×</td><td>97 %</td><td>1.03</td><td>79 %</td></tr>
+    <tr><td>12</td><td>5.2 %</td><td>1.92 ×</td><td>99 %</td><td>1.01</td><td>72 %</td></tr>
+    <tr><td>18</td><td>3.5 %</td><td>2.88 ×</td><td>99 %</td><td>1.01</td><td>68 %</td></tr>
+  </table>
+  <p class="note">The transition is sharp. At τ = 6 days the reserve is 98 % mobilized, yet the sheet still fails to hold its density and settles at 52 %, with cells living permanently stretched twofold. At 9 days the margin is already 1.4-fold and the density 97 %. So this tissue describes not a healthy epithelium but a maximally loaded one: it has nothing left to heal a wound with, as the entire reserve goes into routine turnover.</p>
+  <p class="note">Check this with the τ slider on the bench: sweep it from 6 to 12 days and watch the reserve margin and the density. The reverse sweep is just as informative — that is what exhaustion of the reserve under accelerated turnover looks like.</p>
+
+  <div class="rule"></div>
+
+  <h2>Conclusions</h2>
+  <p class="note"><b>1. Feasibility condition.</b> <code>reserve fraction ≥ T<sub>cycle</sub> / τ</code>. At a 15 h cycle and a 6 day lifespan this is 10.4 %, i.e. exactly the 10 % specified — the tissue sits on the boundary with zero margin.</p>
+  <p class="note"><b>2. The boundary is sharp.</b> At τ = 6 d the reserve is 98 % mobilized and density still collapses to 52 %; at τ = 9 d the margin is 1.44× and density 97 %. Three days of lifespan separate a healthy sheet from an exhausted one.</p>
+  <p class="note"><b>3. Healing has two beats.</b> Coverage runs on the spreading clock (minutes to hours), density restoration on the cell-cycle clock (days). Prediction: the metabolic crisis, if it occurs at all, arrives <i>after</i> the wound looks closed — in the phase of a thin, spread sheet.</p>
+  <p class="note"><b>4. Small defects close without cell migration</b>, by convergence of the edges. Division only joins on the second beat.</p>
+  <p class="note"><b>5. A flat monolayer cannot starve, so the regeneration pendulum cannot switch on in it.</b> Supply enters per unit area and consumers sit per unit area, so per-cell supply is independent of sheet size. With no deficit there is no amplitude. The model confirms this behaviourally: it converges either to homeostasis or to a chronically stretched sheet, but it never oscillates. Two further arms of the loop are also broken in a single layer: cell loss is vented apically, away from the basement membrane, and the tight junctions seal beneath the departing cell before it leaves, so released MMPs never reach the basal compartment. In stratified epithelium all four arms close, because basal cells are anchored by hemidesmosomes, cannot be extruded apically, and die in place against the membrane — while thickness makes per-cell supply fall as 1/n.</p>
+  <p class="note"><b>6. Methodological.</b> The mortality produced by the earlier lattice version with migration was an artefact of representation: a departing cell moved a hole instead of covering area. The territory model removes it by construction.</p>
+
+  <p class="note"><b>Empirical test of conclusion 5 — and it only half survives.</b> Read literally as "simple epithelium", the prediction fails: most common carcinomas arise from single-layered epithelia — colorectal, gastric, endometrial, pancreatic ductal, lung adenocarcinoma, renal cell, thyroid, cholangiocarcinoma, tubal/ovarian serous. Read strictly as "flat monolayer on a free surface", the prediction holds strikingly: endothelium, mesothelium, alveolar type I cells and glomerular podocytes together cover an enormous area yet almost never give rise to carcinoma, and where they do (mesothelioma) it takes decades of asbestos injury. The discriminating variable therefore is not the number of layers but <b>whether the proliferative compartment is spatially concentrated relative to its supply</b>: dispersed division on a flat sheet creates no local demand hotspot, whereas a crypt base, a gland, or a stratified basal layer does. Caveat: the comparison is confounded, since the cancer-resistant flat epithelia are also slow-turnover and unexposed to luminal carcinogens, so low incidence has at least two other sufficient explanations.</p>
+
+  <div class="rule"></div>
+
+  <p class="note"><b>What changed in the core.</b> Previously a lattice node was a cell, so area could only be covered by division — hence the order-of-magnitude mismatch against real tissue and all the spurious migration-driven mortality. Now a cell owns a territory and coverage proceeds by two fast processes that create no new consumers: <b>spreading</b>, where a free node goes to the least stretched neighbour, and <b>shift</b>, where a node passes from a more stretched cell to a less stretched one so that tension redistributes across the sheet. Division remains a slow process on cell-cycle time and now only <i>restores density</i> rather than closing the hole.</p>
+  <p class="note"><b>Tension is area.</b> A cell on one node is relaxed; on four it is stretched to the limit. The tension a cell senses is averaged over itself and its neighbours, with an adjacent empty node counted as maximal stretch. A reserve cell wakes when the averaged tension crosses the threshold and it holds at least two nodes to divide between. Division hands half the territory to the daughter, and tension drops for both. That is the whole loop.</p>
+  <p class="note"><b>The mother stays in reserve.</b> Otherwise, at a 1:10 ratio the reserve pool drains within a day: each division would spend one reserve cell and return 0.09. So division here is asymmetric — the mother returns to the reserve, and the daughter joins the reserve with probability 1/11, otherwise differentiating. The pool then grows slowly, bounded by the reserve cells' own lifespan.</p>
+  <p class="note"><b>On terminology.</b> «Reserve cells» here means reversibly quiescent, division-competent cells of the normal sheet. The word <i>dormancy</i> is avoided on purpose: in the literature it usually denotes disseminated tumour cells arrested at a distant site, which is a different state with a different mechanism.</p>
+  <p class="note">Borders are drawn around cells rather than nodes, so a spread cell appears as a large polygon. The field is 76 × 79 nodes, one node is 20 µm, and one step is 3 minutes. The wound is inflicted on top of the current state rather than from scratch — let the sheet reach equilibrium first.</p>
+
+</div>
+
+<button id="bExit" class="ghost">Exit</button>
+<div id="expandBar">
+  <button id="bRun2">Pause</button>
+  <button id="bWound2" class="act">Wound</button>
+  <button id="bSpeed2" class="ghost">4.8 h/s</button>
+</div>
+
+<script>
+(function(){
+'use strict';
+const W=76,H=79,N=W*H,CELL_UM=20;
+const idx=(c,r)=>r*W+c;
+const NBF=new Int32Array(N*6).fill(-1), NBC=new Uint8Array(N);
+for(let r=0;r<H;r++)for(let c=0;c<W;c++){
+  const i=idx(c,r),odd=r&1;
+  const T=odd?[[1,0],[1,-1],[0,-1],[-1,0],[0,1],[1,1]]
+             :[[1,0],[0,-1],[-1,-1],[-1,0],[-1,1],[0,1]];
+  let n=0;
+  for(let d=0;d<6;d++){
+    const nc=c+T[d][0], nr=r+T[d][1];
+    if(nc>=0&&nc<W&&nr>=0&&nr<H){ NBF[i*6+d]=idx(nc,nr); n++; }
+  }
+  NBC[i]=n;
+}
+const RESV=1,DIFF=2,DIV=3,SHED=4;
+const K={P0:.18,Dg:.15,Km:.40,gamma:1.6,dtMin:3,commit:.40,arrTh:.75,
+         shedT:8,kClaim:.5,resH:25,beta:12};
+const S={lifeD:6,sprD:3,pResv:1/11,cycH:15,aMax:4,Twake:1.08,sigma:.85,
+         defect:600,f0:.10,tensView:false,running:true,hps:4.8,pRevert:1/1000,
+         revTolH:2.4,revStore:1/3,woundEvery:0,caption:true,glucAmp:.30,revGate:.5};
+
+const cap=N+8;
+const owner=new Int32Array(N).fill(-1);
+const cst=new Uint8Array(cap),carea=new Int32Array(cap),
+      cgly=new Float64Array(cap),cprog=new Float64Array(cap),
+      cage=new Float64Array(cap),clife=new Float64Array(cap),
+      cshed=new Int16Array(cap),calive=new Uint8Array(cap),
+      cup=new Float64Array(cap),tsum=new Float64Array(cap),
+      tcnt=new Int32Array(cap),splitTo=new Int32Array(cap).fill(-1),
+      assigned=new Int32Array(cap),ctens=new Float64Array(cap),
+      clin=new Uint8Array(cap),          // 0 = normal lineage, 1 = reverted lineage
+      nSame=new Int32Array(cap),         // adjacent cells of the reverted lineage
+      nOther=new Int32Array(cap),        // adjacent cells of the normal lineage
+      nFreeA=new Int32Array(cap),        // adjacent free nodes
+      gsum=new Float64Array(cap),        // sum of g over a cell's own nodes, this step
+      ctol=new Int32Array(cap);           // remaining tolerance to a failed niche
+const g=new Float64Array(N).fill(1),gn=new Float64Array(N);
+const freeIds=new Int32Array(cap); let nFree=0,nextId=0;
+let seedBase=20260727,seed=seedBase;
+const rnd=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};
+const newCell=()=>{const id=nFree?freeIds[--nFree]:nextId++;calive[id]=1;
+  carea[id]=0;cprog[id]=0;cshed[id]=0;splitTo[id]=-1;return id;};
+const killCell=id=>{calive[id]=0;cst[id]=0;clin[id]=0;freeIds[nFree++]=id;};
+
+let c0,Vn,Tcyc,lifeH,lifeSp,resvLifeH,sMax0;
+function derive(){
+  c0=K.P0/(K.beta*S.sigma); Vn=K.gamma*K.beta*c0;
+  Tcyc=S.cycH*60/K.dtMin; lifeH=S.lifeD*24; lifeSp=S.sprD*24;
+  resvLifeH=S.lifeD*1.3*24; sMax0=K.resH*60/K.dtMin*c0;
+}
+const starveThr=()=>K.Km/(K.gamma-1);
+const tolSteps=()=>Math.max(1,Math.round(S.revTolH*60/K.dtMin));
+const needResv=()=>S.cycH/(S.lifeD*24);
+
+let step=0,shedTotal=0,starveTotal=0,divTotal=0,woundAt=-1,woundN=0,woundBase=0;
+let revTotal=0,revLost=0,revEstablished=false,revEstStep=-1,revGAvg=null;
+let lastWound=-1e9,woundCount=0;
+const dying=[], dyFlag=new Uint8Array(cap);
+const TRN=420;
+const tr={dens:new Float32Array(TRN),div:new Float32Array(TRN),
+          resv:new Float32Array(TRN),g:new Float32Array(TRN),
+          time:new Float32Array(TRN),
+          n:0,head:0,every:2,acc:0};
+
+function reset(){
+  derive(); seed=seedBase;
+  owner.fill(-1); nFree=0; nextId=0; g.fill(1);
+  step=0;shedTotal=0;starveTotal=0;divTotal=0;woundAt=-1;woundN=0;woundBase=0;
+  revTotal=0;revLost=0;revEstablished=false;revEstStep=-1;dying.length=0;revGAvg=null;
+  lastWound=-1e9;woundCount=0;
+  clin.fill(0);
+  for(let i=0;i<cap;i++) ctens[i]=1;
+  tr.n=0;tr.head=0;tr.acc=0;tr.every=2;
+  for(let i=0;i<N;i++){
+    const id=newCell(); owner[i]=id; carea[id]=1;
+    cst[id]= rnd()<S.f0?RESV:DIFF; cgly[id]=sMax0;
+    clife[id]= cst[id]===RESV?resvLifeH:lifeH+(rnd()-.5)*2*lifeSp;
+    cage[id]= rnd()*clife[id];
+  }
+}
+function inflictWound(wander){
+  woundBase=count().free;
+  const R=Math.sqrt(S.defect*.866/Math.PI);
+  // recurrent injury lands at a fresh site each time; a fixed site would both
+  // create the permissive space and destroy whatever grew in it
+  const cx = wander ? R+rnd()*(W-2*R)      : (W-1)/2+.25,
+        cy = wander ? (R+rnd()*(H-2*R))*.866 : (H-1)/2*.866;
+  let rm=0;
+  for(let r=0;r<H;r++)for(let c=0;c<W;c++){
+    const x=c+(r&1)*.5,y=r*.866,i=idx(c,r);
+    if((x-cx)**2+(y-cy)**2<=R*R && owner[i]>=0){
+      const id=owner[i]; carea[id]--; owner[i]=-1;
+      if(carea[id]<=0) killCell(id);
+      rm++;
+    }
+  }
+  woundN=rm; woundAt=step; lastWound=step; woundCount++;
+}
+
+function advance(){
+  step++;
+  // recurrent injury: the permissive condition re-imposed at a fixed interval
+  if(S.woundEvery>0 && step-lastWound >= S.woundEvery*60/K.dtMin) inflictWound(true);
+  const beta=K.beta,Km=K.Km,Dg=K.Dg,P0=K.P0,aMax=S.aMax;
+  // circadian modulation of glucose supply: sinusoidal, period 24 h, mean
+  // preserved exactly (sin averages to zero over a whole day), so the total
+  // daily dose equals the unmodulated case regardless of amplitude
+  const tHr=step*K.dtMin/60;
+  const P0eff=P0*(1+S.glucAmp*Math.sin(2*Math.PI*tHr/24));
+
+  for(let i=0;i<N;i++){
+    const gi=g[i]; let lap=0; const b=i*6;
+    for(let d=0;d<6;d++){ const q=NBF[b+d]; if(q>=0) lap+=g[q]-gi; }
+    const id=owner[i]; let use=0;
+    if(id>=0){ const dm= cst[id]===DIV?beta*c0:c0; use=dm/carea[id]; }
+    const cp=Vn*gi/(Km+gi);
+    const v=gi+Dg*lap+P0eff*(1-gi)-(cp<use?cp:use);
+    gn[i]=v<0?0:(v>1?1:v);
+  }
+  g.set(gn);
+
+  for(let id=0;id<nextId;id++){
+    if(!calive[id]) continue;
+    if(cst[id]===SHED){ if(--cshed[id]<=0) cst[id]=0; continue; }
+    cage[id]+=K.dtMin/60;
+    // the reverted lineage is undifferentiated: it does not age out and is not
+    // shed apically. Its only disposal route is the no-neighbour/no-room rule below.
+    if(clin[id]===1) continue;
+    if(cst[id]!==DIV && cage[id]>=clife[id]){ cst[id]=SHED; cshed[id]=K.shedT; }
+  }
+  for(let i=0;i<N;i++){
+    const id=owner[i];
+    if(id>=0 && calive[id] && cst[id]===0) owner[i]=-1;
+  }
+  for(let id=0;id<nextId;id++)
+    if(calive[id] && cst[id]===0){ killCell(id); shedTotal++; }
+
+  for(let i=0;i<N;i++){
+    if(owner[i]>=0 || rnd()>K.kClaim) continue;
+    let best=-1,ba=1e9; const b=i*6;
+    for(let d=0;d<6;d++){
+      const q=NBF[b+d]; if(q<0) continue;
+      const id=owner[q];
+      if(id<0||cst[id]===SHED) continue;
+      if(carea[id]<aMax && carea[id]<ba){ ba=carea[id]; best=id; }
+    }
+    if(best>=0){ owner[i]=best; carea[best]++; }
+  }
+
+  for(let t=0;t<N;t++){
+    const i=(rnd()*N)|0, a=owner[i];
+    if(a<0||cst[a]===SHED) continue;
+    const b=i*6, j=NBF[b+((rnd()*6)|0)];
+    if(j<0) continue;
+    const bb=owner[j];
+    if(bb<0||bb===a||cst[bb]===SHED||carea[bb]>=aMax) continue;
+    if(carea[a]>carea[bb]){
+      let keep=0; for(let d=0;d<6;d++){const q=NBF[b+d]; if(q>=0&&owner[q]===a)keep++;}
+      if(keep>=1){ owner[i]=bb; carea[a]--; carea[bb]++; }
+    }
+  }
+
+  for(let id=0;id<nextId;id++){ tsum[id]=0;tcnt[id]=0;cup[id]=0;
+                                nSame[id]=0;nOther[id]=0;nFreeA[id]=0;gsum[id]=0; }
+  for(let i=0;i<N;i++){
+    const a=owner[i]; if(a<0) continue;
+    tsum[a]+=carea[a]; tcnt[a]++; gsum[a]+=g[i];
+    const b=i*6;
+    for(let d=0;d<6;d++){
+      const q=NBF[b+d]; if(q<0) continue;      // field edge is not empty space
+      const bb=owner[q];
+      if(bb<0){ tsum[a]+=aMax; tcnt[a]++; nFreeA[a]++; }
+      else if(bb!==a){ tsum[a]+=carea[bb]; tcnt[a]++;
+        if(cst[bb]!==SHED){ if(clin[bb]===1) nSame[a]++; else nOther[a]++; } }
+    }
+    if(cst[a]===DIV){
+      const share=beta*c0/carea[a], cp=Vn*g[i]/(Km+g[i]);
+      cup[a]+= cp<share?cp:share;
+    }
+  }
+
+  let nSplit=0, revGsum=0, revGcnt=0;
+  for(let id=0;id<nextId;id++){
+    if(!calive[id]||cst[id]===SHED){ ctens[id]=1; continue; }
+    const tens= tcnt[id]? tsum[id]/tcnt[id] : 1;
+    ctens[id]=tens;
+    const gAvg = carea[id]? gsum[id]/carea[id] : 1;
+
+    /* ---- reverted lineage: niche rule ----------------------------------
+       "Surrounded on all sides by its own kind" -> the clone has a niche and
+       the cell settles into its own reserve pool (blue).
+       Otherwise it must have room to divide, and builds the niche itself
+       (purple). With neither similar neighbours nor room, it dies. The two
+       failures must coincide: this is why an isolated reversion in a dense
+       sheet is extinguished at once, while one in a denuded patch survives.
+       A glucose gate now sits alongside the spatial condition: the reverted
+       lineage has no counter-regulatory buffer of its own, so a niche can
+       only be claimed and division can only start while the cell's local
+       glucose is at or above the gate. A circadian trough that pushes local
+       glucose below the gate blocks growth exactly as the absence of room
+       does — it is routed through the same tolerance countdown, not an
+       instant kill, so a single trough is survivable but a sustained one
+       is not. */
+    if(clin[id]===1){
+      revGsum+=gAvg; revGcnt++;
+      const surrounded = (nFreeA[id]===0 && nOther[id]===0 && nSame[id]>0);
+      const gateOK = gAvg >= S.revGate;
+      if(surrounded && gateOK){
+        if(!revEstablished){ revEstablished=true; revEstStep=step; }
+        ctol[id]=tolSteps();
+        if(cst[id]!==RESV && cst[id]!==DIV){ cst[id]=RESV; cprog[id]=0; }
+      } else {
+        const room = ((carea[id]>=2) || nFreeA[id]>0) && gateOK;
+        if(room){
+          ctol[id]=tolSteps();
+          if(cst[id]!==DIV){ cst[id]=DIV; cprog[id]=0; continue; }
+          // ^ converted this step; its uptake was not in this step's census,
+          //   so defer the substrate test to the next step or it bounces back
+        } else {
+          // deprivation must be SUSTAINED, not instantaneous: at equilibrium a
+          // free node is reclaimed within one step, so an instantaneous test
+          // kills every reversion before it can act. Tolerance = 0 restores the
+          // literal rule.
+          if(--ctol[id]<=0){ dying.push(id); revLost++; continue; }
+        }
+      }
+    }
+
+    if(cst[id]===RESV){
+      if(tens>=S.Twake && carea[id]>=2){ cst[id]=DIV; cprog[id]=0; }
+    } else if(cst[id]===DIV){
+      const dm=beta*c0, ratio=cup[id]/dm, short=dm-cup[id];
+      if(ratio<K.arrTh && cprog[id]<K.commit){ cst[id]=RESV; cprog[id]=0; }
+      else{
+        if(short>1e-12){
+          cgly[id]-=short;
+          if(cgly[id]<=0){ cst[id]=SHED; cshed[id]=K.shedT; starveTotal++; continue; }
+        }
+        cprog[id]+=ratio/Tcyc;
+        if(cprog[id]>=1 && carea[id]>=2){ splitTo[id]=newCell(); nSplit++; }
+      }
+    }
+    if(cst[id]!==DIV){
+      const mx=(clin[id]===1?sMax0*S.revStore:sMax0);
+      // the normal lineage's buffer refills at a flat rate regardless of the
+      // instantaneous glucose level (that is the counter-regulatory buffer
+      // it has and the reverted lineage does not); the reverted lineage's
+      // refill is gated by the same local glucose that gates its growth, so
+      // a circadian trough narrows the buffer as well as blocking division
+      const rate = clin[id]===1 ? .02*Math.max(0,gAvg) : .02;
+      if(cgly[id]<mx) cgly[id]=Math.min(mx,cgly[id]+rate*mx);
+    }
+  }
+  revGAvg = revGcnt? revGsum/revGcnt : null;
+
+  if(nSplit){
+    for(let id=0;id<nextId;id++) assigned[id]=0;
+    for(let i=0;i<N;i++){
+      const a=owner[i]; if(a<0) continue;
+      const kid=splitTo[a]; if(kid<0) continue;
+      if(assigned[a] < (carea[a]>>1)){ owner[i]=kid; assigned[a]++; }
+    }
+    for(let id=0;id<nextId;id++){
+      const kid=splitTo[id]; if(kid<0) continue;
+      splitTo[id]=-1;
+      const moved=assigned[id];
+      carea[kid]=moved; carea[id]-=moved;
+      cgly[kid]=cgly[id]*.5; cgly[id]*=.5;
+      cage[kid]=0; cprog[kid]=0;
+      if(clin[id]===1){
+        // daughter of the reverted lineage stays reverted and undifferentiated;
+        // whether it becomes reserve is decided by the niche rule, not by pResv
+        clin[kid]=1; cst[kid]=DIFF; clife[kid]=1e9; ctol[kid]=tolSteps();
+        cst[id]=DIFF; cprog[id]=0; cage[id]=0;
+      } else if(rnd()<S.pRevert){
+        // reversion to the prior embryological state
+        clin[kid]=1; cst[kid]=DIFF; clife[kid]=1e9; ctol[kid]=tolSteps();
+        cgly[kid]=sMax0*S.revStore; revTotal++;
+        cst[id]=RESV; cprog[id]=0; cage[id]=0;
+      } else {
+        clin[kid]=0;
+        cst[kid]= rnd()<S.pResv?RESV:DIFF;
+        clife[kid]= cst[kid]===RESV?resvLifeH:lifeH+(rnd()-.5)*2*lifeSp;
+        cst[id]=RESV; cprog[id]=0; cage[id]=0;
+      }
+      divTotal++;
+    }
+  }
+
+  if(dying.length){
+    for(const id of dying) dyFlag[id]=1;
+    for(let i=0;i<N;i++){ const a=owner[i]; if(a>=0&&dyFlag[a]) owner[i]=-1; }
+    for(const id of dying){ dyFlag[id]=0; if(calive[id]) killCell(id); }
+    dying.length=0;
+  }
+
+  const c=count();
+  if(++tr.acc>=tr.every){
+    tr.acc=0;
+    tr.dens[tr.head]=c.cells/N; tr.div[tr.head]=c.nv;
+    tr.resv[tr.head]=c.nd; tr.g[tr.head]=c.gmin;
+    tr.time[tr.head]=step*K.dtMin/60;
+    tr.head=(tr.head+1)%TRN;
+    if(tr.n<TRN) tr.n++; else tr.every*=2;
+  }
+  return c;
+}
+
+/* largest contiguous patch of reverted cells, measured in cells not nodes */
+const seenN=new Uint8Array(N), stackN=new Int32Array(N), seenC=new Uint8Array(cap);
+function largestClone(){
+  seenN.fill(0);
+  let best=0;
+  for(let s0=0;s0<N;s0++){
+    const a0=owner[s0];
+    if(seenN[s0]||a0<0||clin[a0]!==1) continue;
+    let sp=0, cells=0;
+    stackN[sp++]=s0; seenN[s0]=1;
+    const touched=[];
+    while(sp){
+      const i=stackN[--sp], a=owner[i];
+      if(!seenC[a]){ seenC[a]=1; touched.push(a); cells++; }
+      const b=i*6;
+      for(let d=0;d<6;d++){
+        const q=NBF[b+d]; if(q<0||seenN[q]) continue;
+        const bb=owner[q]; if(bb<0||clin[bb]!==1) continue;
+        seenN[q]=1; stackN[sp++]=q;
+      }
+    }
+    for(const a of touched) seenC[a]=0;
+    if(cells>best) best=cells;
+  }
+  return best;
+}
+
+function count(){
+  let nd=0,nf=0,nv=0,ns=0,free=0,gmin=1,asum=0,ac=0;
+  for(let i=0;i<N;i++){ if(owner[i]<0) free++; else if(g[i]<gmin) gmin=g[i]; }
+  let rev=0,revR=0;
+  for(let id=0;id<nextId;id++){
+    if(!calive[id]) continue;
+    const s=cst[id];
+    if(clin[id]===1){ if(s===RESV)revR++; else if(s!==SHED)rev++; }
+    else { if(s===RESV)nd++;else if(s===DIFF)nf++;else if(s===DIV)nv++;else ns++; }
+    asum+=carea[id]; ac++;
+  }
+  const norm=nd+nf+nv+ns;
+  return {nd,nf,nv,ns,free,gmin,cells:ac,aMean:ac?asum/ac:1,rev,revR,norm,
+          dens:ac/N, mob: (nd+nv)?nv/(nd+nv):0, clone:largestClone()};
+}
+
+/* ---------- rendering ---------- */
+function fit(cv,ratio){
+  const dpr=Math.min(2,window.devicePixelRatio||1);
+  const w=cv.clientWidth||320,h=Math.round(w*ratio);
+  cv.style.height=h+'px';
+  const nw=Math.round(w*dpr),nh=Math.round(h*dpr);
+  if(cv.width!==nw||cv.height!==nh){cv.width=nw;cv.height=nh;}
+  const ctx=cv.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,w,h);
+  return {ctx,w,h};
+}
+const el=id=>document.getElementById(id);
+const sheetCv=el('sheetCv'),traceCv=el('traceCv');
+const COL={1:'#3E6C8C',2:'#E0B21A',3:'#B3231C',4:'#14181A'};
+const XS=new Float32Array(N),YS=new Float32Array(N);
+let kC=-1;
+
+function drawSheet(){
+  const ratio=(H*.866+.5)/(W+.5);
+  const {ctx,w,h}=fit(sheetCv,ratio);
+  const k=w/(W+.5), R=.577*k;
+  ctx.fillStyle='rgba(255,255,255,.5)'; ctx.fillRect(0,0,w,h);
+  if(kC!==k){ kC=k;
+    for(let r=0;r<H;r++)for(let c=0;c<W;c++){
+      const i=idx(c,r); XS[i]=(c+(r&1)*.5+.25)*k; YS[i]=(r*.866+.4)*k;
+    }
+  }
+  if(S.tensView){
+    const amax=S.aMax;
+    for(let L=1;L<=5;L++){
+      ctx.beginPath(); let any=false;
+      for(let i=0;i<N;i++){
+        const a=owner[i]; if(a<0) continue;
+        const t=(ctens[a]-1)/(amax-1);
+        if(Math.min(4,(t*5)|0)===L-1 && t>0.02){ hex(ctx,XS[i],YS[i],R); any=true; }
+      }
+      if(any){ ctx.fillStyle='rgba(179,35,28,'+(L/5*.7).toFixed(3)+')'; ctx.fill(); }
+    }
+  } else {
+    const GR=[
+      [i=>{const a=owner[i];return a>=0&&clin[a]===0&&cst[a]===DIFF;},'#E0B21A'],
+      [i=>{const a=owner[i];return a>=0&&clin[a]===0&&cst[a]===RESV;},'#3E6C8C'],
+      [i=>{const a=owner[i];return a>=0&&clin[a]===0&&cst[a]===DIV; },'#B3231C'],
+      [i=>{const a=owner[i];return a>=0&&clin[a]===1&&cst[a]===RESV;},'#3B4FD8'],
+      [i=>{const a=owner[i];return a>=0&&clin[a]===1&&cst[a]!==RESV&&cst[a]!==SHED;},'#8B3FA8'],
+      [i=>{const a=owner[i];return a>=0&&cst[a]===SHED;},'#14181A'],
+    ];
+    for(const [test,col] of GR){
+      ctx.beginPath(); let any=false;
+      for(let i=0;i<N;i++){ if(test(i)){ hex(ctx,XS[i],YS[i],R); any=true; } }
+      if(any){ ctx.fillStyle=col; ctx.fill(); }
+    }
+  }
+  // cell borders, not node borders
+  ctx.beginPath();
+  for(let i=0;i<N;i++){
+    const a=owner[i], b=i*6;
+    for(let d=0;d<6;d++){
+      const q=NBF[b+d];
+      const bb=q>=0?owner[q]:-2;
+      if(bb===a) continue;
+      const a1=Math.PI/2+(d)*Math.PI/3, a2=a1+Math.PI/3;
+      ctx.moveTo(XS[i]+R*Math.cos(a1),YS[i]+R*Math.sin(a1));
+      ctx.lineTo(XS[i]+R*Math.cos(a2),YS[i]+R*Math.sin(a2));
+    }
+  }
+  ctx.strokeStyle='rgba(27,42,46,.55)'; ctx.lineWidth=.7; ctx.stroke();
+
+  if(S.caption){
+    const L1='t '+(step*K.dtMin/60).toFixed(0)+' h   tau '+S.lifeD+' d   sigma '+S.sigma.toFixed(2)
+            +'   cycle '+S.cycH+' h   Twake '+S.Twake.toFixed(2)+'   gluc ±'+(S.glucAmp*100).toFixed(0)+'%';
+    const L2='revert 1:'+(S.pRevert>0?(1/S.pRevert).toFixed(0):'off')
+            +'   store 1:'+(1/S.revStore).toFixed(1)
+            +'   tol '+S.revTolH.toFixed(1)+' h'
+            +'   gate '+S.revGate.toFixed(2)
+            +'   injury '+(S.woundEvery>0?('every '+S.woundEvery+' h'):'none');
+    const c=lastCount||{dens:0,clone:0,rev:0,revR:0};
+    const L3='density '+(c.dens*100).toFixed(0)+'%   reverted '+((c.rev|0)+(c.revR|0))
+            +'   largest clone '+c.clone;
+    ctx.fillStyle='rgba(228,233,230,.86)'; ctx.fillRect(0,0,w,40);
+    ctx.fillStyle='#1B2A2E'; ctx.font='600 9.5px "IBM Plex Mono",monospace';
+    ctx.fillText(L1,6,13); ctx.fillText(L2,6,24); ctx.fillText(L3,6,35);
+    ctx.strokeStyle='rgba(27,42,46,.3)'; ctx.lineWidth=.5;
+    ctx.beginPath(); ctx.moveTo(0,40.25); ctx.lineTo(w,40.25); ctx.stroke();
+  }
+  const bx=6,by=h-8,bw=10*k;
+  ctx.strokeStyle='rgba(27,42,46,.85)'; ctx.lineWidth=1.4;
+  ctx.beginPath(); ctx.moveTo(bx,by); ctx.lineTo(bx+bw,by);
+  ctx.moveTo(bx,by-3); ctx.lineTo(bx,by+3);
+  ctx.moveTo(bx+bw,by-3); ctx.lineTo(bx+bw,by+3); ctx.stroke();
+  ctx.fillStyle='rgba(27,42,46,.9)'; ctx.font='600 9px "IBM Plex Mono",monospace';
+  ctx.fillText('200 µm',bx+bw+5,by+3);
+}
+function hex(ctx,x,y,R){
+  ctx.moveTo(x,y+R);
+  ctx.lineTo(x+R*.866,y+R*.5); ctx.lineTo(x+R*.866,y-R*.5);
+  ctx.lineTo(x,y-R);
+  ctx.lineTo(x-R*.866,y-R*.5); ctx.lineTo(x-R*.866,y+R*.5);
+  ctx.closePath();
+}
+
+function drawTrace(){
+  const {ctx,w,h}=fit(traceCv,.34);
+  ctx.fillStyle='rgba(255,255,255,.5)'; ctx.fillRect(0,0,w,h);
+  const pL=30,pR=32,pT=8,pB=14,iw=w-pL-pR,ih=h-pT-pB;
+  ctx.strokeStyle='rgba(27,42,46,.12)'; ctx.lineWidth=.5; ctx.beginPath();
+  for(let i=0;i<=4;i++){const y=pT+ih*i/4;ctx.moveTo(pL,y);ctx.lineTo(w-pR,y);} ctx.stroke();
+  const n=tr.n,start=(tr.head-n+TRN)%TRN;
+  let mx=40;
+  for(let i=0;i<n;i++){const j=(start+i)%TRN; if(tr.div[j]>mx)mx=tr.div[j]; if(tr.resv[j]>mx)mx=tr.resv[j];}
+  // dynamic window: the x-axis spans exactly the recorded period, not a fixed
+  // buffer width, so the trace always fills the plate at whatever timescale
+  // is currently being recorded
+  const tMin = n? tr.time[start] : 0;
+  const tMax = n? tr.time[(tr.head-1+TRN)%TRN] : 0;
+  const tSpan = Math.max(1e-6, tMax-tMin);
+  const px=i=>{ if(n<2) return pL;
+    const j=(start+i)%TRN; return pL+iw*(tr.time[j]-tMin)/tSpan; };
+  const line=(a,sc,col,wd)=>{ if(n<2)return;
+    ctx.strokeStyle=col;ctx.lineWidth=wd;ctx.beginPath();
+    for(let i=0;i<n;i++){const y=pT+ih*(1-sc(a[(start+i)%TRN]));
+      i?ctx.lineTo(px(i),y):ctx.moveTo(px(i),y);} ctx.stroke(); };
+  const thr=starveThr();
+  ctx.strokeStyle='rgba(46,124,123,.55)';ctx.lineWidth=1;ctx.setLineDash([4,3]);
+  ctx.beginPath();const yt=pT+ih*(1-thr);ctx.moveTo(pL,yt);ctx.lineTo(w-pR,yt);ctx.stroke();
+  ctx.setLineDash([]);
+  line(tr.g,v=>v,'#2E7C7B',1.2);
+  line(tr.resv,v=>v/mx,'#3E6C8C',1.3);
+  line(tr.div,v=>v/mx,'#B3231C',1.4);
+  line(tr.dens,v=>v,'#1B2A2E',1.8);
+  ctx.strokeStyle='rgba(27,42,46,.6)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(pL,pT);ctx.lineTo(pL,pT+ih);ctx.lineTo(w-pR,pT+ih);ctx.stroke();
+  ctx.font='400 8.5px "IBM Plex Mono",monospace';ctx.fillStyle='rgba(92,110,112,1)';
+  ctx.fillText('100%',2,pT+7);ctx.fillText('0',2,pT+ih+3);
+  ctx.textAlign='right';ctx.fillStyle='#B3231C';ctx.fillText(mx.toFixed(0),w-3,pT+7);
+  ctx.fillStyle='rgba(92,110,112,1)';
+  ctx.fillText(tMax.toFixed(0)+' h',w-pR,h-3);
+  ctx.textAlign='left';ctx.fillText(tMin.toFixed(0)+' h',pL,h-3);
+}
+
+/* ---------- readouts ---------- */
+function refresh(c){
+  // reserve margin is a property of the NORMAL lineage only
+  const need=needResv(), have=(c.nd+c.nv)/Math.max(1,c.norm);
+  el('rNeed').textContent=(need*100).toFixed(1)+' %';
+  const marg=have/need;
+  el('rMarg').textContent=marg.toFixed(2)+' ×';
+  el('rMarg').style.color = marg<1.15?'var(--div)':'';
+  el('rDens').textContent=(c.dens*100).toFixed(0)+' %';
+  el('rArea').textContent=c.aMean.toFixed(2);
+  el('rT').innerHTML=(step*K.dtMin/60).toFixed(0)+' <small>h</small>';
+  el('rN').textContent=c.cells;
+  el('rDiff').textContent=c.nf;
+  el('rResv').textContent=c.nd;
+  el('rDiv').textContent=c.nv;
+  el('rMob').innerHTML=(c.mob*100).toFixed(0)+' <small>%</small>';
+  el('rShed').textContent=c.ns;
+  el('rShedT').textContent=shedTotal;
+  el('rStarve').textContent=starveTotal;
+  el('rFree').textContent=c.free;
+  el('rG').innerHTML=c.gmin.toFixed(2)+' <small>·C₀</small>';
+  el('rThr').innerHTML=starveThr().toFixed(2)+' <small>·C₀</small>';
+  el('rRevG').innerHTML=(revGAvg===null?'—':revGAvg.toFixed(2))+' <small>·g</small>';
+
+  let wClosed=null;
+  if(woundAt>=0){
+    const rem=Math.max(0,c.free-woundBase);
+    wClosed=1-rem/Math.max(1,woundN);
+    if(wClosed>=0.995) woundAt=-1;
+  }
+  el('rWn').textContent = woundN?woundN:'—';
+  el('rWc').innerHTML = (wClosed===null?'—':(wClosed*100).toFixed(0))+' <small>%</small>';
+  el('rRev').textContent=c.rev;
+  el('rRevR').textContent=c.revR;
+  el('rRevT').textContent=revTotal;
+  el('rRevL').textContent=revLost;
+  el('rClone').innerHTML=c.clone+' <small>cells</small>';
+  el('rWct').textContent=woundCount;
+  el('rEst').textContent = revEstStep>=0
+    ? 'at '+(revEstStep*K.dtMin/60).toFixed(0)+' h' : 'none';
+  el('rEst').style.color = revEstStep>=0?'var(--div)':'';
+
+  const md=el('mode'),nt=el('modeNote');
+  if(wClosed!==null){
+    md.className='mode warn'; md.textContent='Wound closing';
+    nt.textContent=(wClosed*100).toFixed(0)+' % of '+woundN+
+      ' nodes covered. Coverage proceeds by spreading and shift; division only restores density. '+
+      'Mean cell area '+c.aMean.toFixed(2)+' nodes.';
+  } else if(marg<1.05){
+    md.className='mode warn'; md.textContent='Reserve at its limit';
+    nt.textContent=(need*100).toFixed(1)+' % reserve required, '+(have*100).toFixed(1)+
+      ' % available, '+(c.mob*100).toFixed(0)+' % mobilized. The sheet cannot hold density: '+
+      (c.dens*100).toFixed(0)+' %, cells stretched '+c.aMean.toFixed(2)+'-fold. Nothing left to heal a wound with.';
+  } else if(c.dens>0.93){
+    md.className='mode'; md.textContent='Homeostasis';
+    nt.textContent='Density '+(c.dens*100).toFixed(0)+' %, reserve margin '+marg.toFixed(2)+
+      ' ×, '+(c.mob*100).toFixed(0)+' % mobilized. Shedding is balanced by division.';
+  } else {
+    md.className='mode'; md.textContent='Sheet converging';
+    nt.textContent='Density '+(c.dens*100).toFixed(0)+' %, mean cell area '+
+      c.aMean.toFixed(2)+'. Tension is above the setpoint; the reserve is pulling density back up.';
+  }
+}
+
+/* ---------- main loop ---------- */
+let last=null,lastCount=null,acc=0,tPrev=performance.now();
+function loop(now){
+  const dt=Math.min(.1,(now-tPrev)/1000); tPrev=now;
+  if(S.running){
+    acc+=dt*S.hps/(K.dtMin/60);
+    let budget=320;   // must cover the top rung: 76.8 h/s at 0.05 h/step
+    while(acc>=1&&budget-->0){ acc-=1; last=advance(); }
+    if(acc>1) acc=0;
+  }
+  if(!last) last=count();
+  lastCount=last;
+  drawSheet(); drawTrace(); refresh(last);
+  requestAnimationFrame(loop);
+}
+
+/* ---------- controls ---------- */
+function setLife(v){
+  const old=S.lifeD; S.lifeD=v;
+  if(old>0 && old!==v){                     // rescale cells that are already alive
+    const q=v/old;
+    for(let id=0;id<nextId;id++) if(calive[id]){ clife[id]*=q; cage[id]*=q; }
+  }
+}
+function bind(id,out,fmt,set){
+  const s=el(id);
+  const upd=()=>{const v=parseFloat(s.value); set(v); el(out).textContent=fmt(v); derive();};
+  s.addEventListener('input',upd); upd();
+}
+bind('sDef','vDef',  v=>v.toFixed(0),        v=>S.defect=v);
+bind('sEvery','vEvery', v=>v<=0?'off':v.toFixed(0)+' h',  v=>S.woundEvery=v);
+bind('sLife','vLife',v=>v.toFixed(1)+' d', setLife);
+bind('sSpr','vSpr',  v=>v.toFixed(1)+' d', v=>S.sprD=v);
+bind('sP','vP',      v=>'1 : '+((1-v)/v).toFixed(0), v=>S.pResv=v);
+bind('sCyc','vCyc',  v=>v.toFixed(0)+' h',   v=>S.cycH=v);
+bind('sAmax','vAmax',v=>v.toFixed(0)+' nodes',v=>S.aMax=v);
+bind('sTw','vTw',    v=>v.toFixed(2),        v=>S.Twake=v);
+bind('sSig','vSig',  v=>v.toFixed(2),        v=>S.sigma=v);
+bind('sGluc','vGluc',v=>(v*100).toFixed(0)+' %', v=>S.glucAmp=v);
+bind('sRev','vRev',  v=>v<=0?'off':'1 : '+(1/v).toFixed(0), v=>S.pRevert=v);
+bind('sTol','vTol',  v=>v<=0?'instant':v.toFixed(1)+' h',    v=>S.revTolH=v);
+bind('sStore','vStore', v=>'1 : '+(1/v).toFixed(1),          v=>S.revStore=v);
+bind('sGate','vGate', v=>v.toFixed(2), v=>S.revGate=v);
+el('bSeed').addEventListener('click',()=>{
+  const pool=[];
+  for(let id=0;id<nextId;id++)
+    if(calive[id]&&clin[id]===0&&cst[id]!==SHED&&carea[id]>=1) pool.push(id);
+  if(!pool.length) return;
+  const id=pool[(rnd()*pool.length)|0];
+  clin[id]=1; cst[id]=DIFF; clife[id]=1e9; cage[id]=0; cprog[id]=0;
+  ctol[id]=tolSteps(); cgly[id]=sMax0*S.revStore; revTotal++;
+});
+el('cTens').addEventListener('change',e=>S.tensView=e.target.checked);
+el('bRun').addEventListener('click',()=>{
+  S.running=!S.running; el('bRun').textContent=S.running?'Pause':'Run';});
+el('bSpeed').addEventListener('click',()=>{
+  const ord=[0.6,1.2,2.4,4.8,9.6,19.2,38.4,76.8];
+  S.hps=ord[(ord.indexOf(S.hps)+1)%ord.length];
+  el('bSpeed').textContent='Speed '+(S.hps<1?S.hps:S.hps.toFixed(1))+' h/s';});
+el('cCap').addEventListener('change',e=>S.caption=e.target.checked);
+
+/* ---------- expanded mode ---------- */
+const SHEET_RATIO=(H*.866+.5)/(W+.5);
+let expanded=false;
+function sizeExpanded(){
+  if(!expanded) return;
+  const vw=window.innerWidth-8, vh=window.innerHeight-8;
+  const w=Math.min(vw, vh/SHEET_RATIO);
+  sheetCv.style.width=Math.floor(w)+'px';
+}
+function setExpanded(on){
+  expanded=on;
+  document.body.classList.toggle('expanded',on);
+  if(on){
+    sizeExpanded();
+    // native fullscreen if the embedding context permits it; the CSS overlay
+    // above works either way, so a refusal is not an error
+    const r=document.documentElement.requestFullscreen;
+    if(r) r.call(document.documentElement).catch(()=>{});
+  }else{
+    sheetCv.style.width='';
+    if(document.fullscreenElement && document.exitFullscreen)
+      document.exitFullscreen().catch(()=>{});
+  }
+  kC=-1;                                   // force hex centres to recompute
+}
+el('bExit').addEventListener('click',()=>setExpanded(false));
+window.addEventListener('resize',sizeExpanded);
+document.addEventListener('fullscreenchange',()=>{
+  if(!document.fullscreenElement && expanded) setExpanded(false);
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&expanded) setExpanded(false);
+  else if(e.key==='f'||e.key==='F') setExpanded(!expanded);
+});
+// mirrored controls for the expanded bar
+function syncLabels(){
+  const runTxt=S.running?'Pause':'Run',
+        spdTxt=(S.hps<1?S.hps:S.hps.toFixed(1))+' h/s';
+  el('bRun').textContent=runTxt; el('bRun2').textContent=runTxt;
+  el('bSpeed').textContent='Speed '+spdTxt; el('bSpeed2').textContent=spdTxt;
+}
+el('bRun2').addEventListener('click',()=>{S.running=!S.running; syncLabels();});
+el('bSpeed2').addEventListener('click',()=>{
+  const ord=[0.6,1.2,2.4,4.8,9.6,19.2,38.4,76.8];
+  S.hps=ord[(ord.indexOf(S.hps)+1)%ord.length]; syncLabels();});
+el('bWound2').addEventListener('click',()=>inflictWound(false));
+el('bRun').addEventListener('click',syncLabels);
+el('bSpeed').addEventListener('click',syncLabels);
+
+let rec=null,chunks=[],recStart=0,lastURL=null;
+function pickMime(){
+  const want=['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm','video/mp4'];
+  if(typeof MediaRecorder==='undefined') return null;
+  return want.find(t=>{try{return MediaRecorder.isTypeSupported(t)}catch(e){return false}})||null;
+}
+function stamp(){
+  const d=new Date(), p=x=>String(x).padStart(2,'0');
+  return d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+'-'+p(d.getHours())+p(d.getMinutes())+p(d.getSeconds());
+}
+function showLink(url,name,info){
+  if(lastURL) URL.revokeObjectURL(lastURL);
+  lastURL=url;
+  const a=el('dl'); a.href=url; a.download=name; a.textContent='\u2193 '+name;
+  el('dlInfo').textContent=' '+info; el('dlWrap').style.display='';
+}
+el('bRec').addEventListener('click',()=>{
+  if(rec && rec.state!=='inactive'){ rec.stop(); return; }
+  const mime=pickMime();
+  if(!mime){ el('dlWrap').style.display='';
+    el('dl').removeAttribute('href'); el('dl').textContent='';
+    el('dlInfo').textContent='This browser has no MediaRecorder; use Save frame instead.';
+    return; }
+  let stream;
+  try{ stream=sheetCv.captureStream(30); }
+  catch(e){ el('dlWrap').style.display='';
+    el('dl').removeAttribute('href'); el('dl').textContent='';
+    el('dlInfo').textContent='Canvas capture refused: '+e.message; return; }
+  chunks=[];
+  rec=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:8e6});
+  rec.ondataavailable=e=>{ if(e.data&&e.data.size) chunks.push(e.data); };
+  rec.onstop=()=>{
+    const blob=new Blob(chunks,{type:mime});
+    const ext=mime.indexOf('mp4')>=0?'mp4':'webm';
+    const secs=((performance.now()-recStart)/1000).toFixed(0);
+    showLink(URL.createObjectURL(blob),'epithelium-'+stamp()+'.'+ext,
+             '('+secs+' s, '+(blob.size/1048576).toFixed(1)+' MB)');
+    el('bRec').textContent='\u25CF Record video'; el('bRec').classList.remove('act');
+  };
+  recStart=performance.now(); rec.start(250);
+  el('bRec').textContent='\u25A0 Stop recording'; el('bRec').classList.add('act');
+});
+el('bShot').addEventListener('click',()=>{
+  sheetCv.toBlob(b=>{ if(!b) return;
+    showLink(URL.createObjectURL(b),'epithelium-'+stamp()+'.png',
+             '('+(b.size/1024).toFixed(0)+' KB)'); },'image/png');
+});
+
+el('bWound').addEventListener('click',()=>inflictWound(false));
+el('bReset').addEventListener('click',()=>{
+  seedBase=(seedBase*1103515245+12345)>>>0; reset();
+  S.running=true; el('bRun').textContent='Pause';});
+reset();
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
