@@ -138,9 +138,9 @@ visual stand has been done yet.
 No JIT (Numba/Cython) in this version. A single run to 20,000 h takes roughly
 50 minutes on one CPU core; plan batch size and session count accordingly.
 
-The Primary Energetic Filter
+# The Primary Energetic Filter
 
-A Domain-Based Model of Early Clonal Selection in Epithelial Tissue
+## A Domain-Based Model of Early Clonal Selection in Epithelial Tissue
 
 Yuri Dmitrochenko, MD | Israel, 2026
 
