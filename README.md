@@ -138,6 +138,24 @@ visual stand has been done yet.
 No JIT (Numba/Cython) in this version. A single run to 20,000 h takes roughly
 50 minutes on one CPU core; plan batch size and session count accordingly.
 
+# The Primary Energetic Filter
+
+## A Domain-Based Model of Early Clonal Selection in Epithelial Tissue
+
+Yuri Dmitrochenko, MD | Israel, 2026
+
+This work presents a theoretical and computational model of early clonal selection within a physiological trophic domain defined as an integrated epithelium → basement membrane → ECM/stroma → microcirculation unit.
+
+The central hypothesis is that local resource availability acts as a primary energetic filter on rare stochastic cellular reversions. Cell fate depends on Supply × Buffer × Demand × Time, with glycogen providing a temporal buffer against fluctuations in glucose availability.
+
+At low clonal mass, energetic fluctuations may eliminate vulnerable reverted cells. Once a clone becomes established, the same stress may instead promote cell injury, stromal activation, ECM remodeling, and local architectural destabilization.
+
+The model is intended as a testable module of a broader multiscale architecture:
+
+Cell → Domain → Tissue → Organ
+
+The proposed mechanisms remain theoretical and require computational and experimental validation.
+
 ## Authors
 
 Yuri Dmitrochenko, MD · Sarah-Lana Demi
